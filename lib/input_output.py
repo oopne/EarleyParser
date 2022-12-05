@@ -4,16 +4,6 @@ class InputParser:
     def __init__(self, file):
         self.__input = file.readline
 
-    def welcome_message(self):
-        print('Please, enter your grammar and word to check.')
-        print('Format for the word: "term1""term2""term3"...')
-        print('Format for start nonterminal: <nonterm>')
-        print('Rule format:')
-        print('<nonterm1>=<nonterm2>"term1""term2"<nonterm2>...')
-        print('Put word on the 1st line, ')
-        print('Nonterminals and terminals can be any strings without ", <, >.')
-        print('On the last line type End')
-
     def __parse_word(self, word):
         if not word:
             return None

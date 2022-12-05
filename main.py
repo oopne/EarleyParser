@@ -5,6 +5,9 @@ from sys import stdin
 def main():
     input_parser = InputParser(stdin)
     word, start_nonterminal, rules = input_parser.parse()
+    print(word, start_nonterminal, rules)
+    for rule in rules:
+        print(rule.left, rule.right)
     earley_parser = EarleyParser(word, start_nonterminal, rules)
     print(earley_parser.check())
 

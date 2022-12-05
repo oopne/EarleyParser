@@ -7,10 +7,21 @@ class Rule:
 
 
 class Situation:
+    PRIME = 999983
+
     def __init__(self, rule, point, read_before):
         self.rule = rule
         self.point = point
         self.read_before = read_before
+
+    def __eq__(self, other):
+        return self.rule == other.rule and\
+                self.point == other.point and\
+                self.read_before == other.read_before
+
+    def __hash__(self):
+        return self.rule + self.point * self.PRIME +\
+                self.read_before * self.PRIME * self.PRIME
 
 
 class EarleyParser:
@@ -19,6 +30,8 @@ class EarleyParser:
 
     def __init__(self, word, start_nonterminal, rules):
         self._rules = rules
+        for rule in self._rules:
+            rule.right.append(self._END_OF_STRING)
         self._word = word
         self._START_NONTERMINAL = start_nonterminal
         # D_j is a map (symbol after .) -> (situation)
@@ -27,10 +40,18 @@ class EarleyParser:
 
     def __scan(self, index):
         changed = False
-        for situation in self._stages[index][word[index]]:
-            self._stages[index + 1][self._rules[rule].right[index]].append(
-                Situation(situation.rule, situation.point + 1),
+        for situation in self._stages[index][self._word[index]]:
+            rule = situation.rule
+            new_point = situation.point + 1
+            new_situation = Situation(
+                rule,
+                new_point,
+                situation.read_before,
                 )
+            self._stages[index + 1][self._rules[rule].right[new_point]].append(
+                new_situation,
+                )
+            self._processed_situations.add(new_situation)
             changed = True
 
         return changed
@@ -91,6 +112,7 @@ class EarleyParser:
         self._stages[0][self._START_NONTERMINAL].append(
             Situation(new_rule, 0, 0),
             )
+        self._processed_situations.add(Situation(new_rule, 0, 0))
         
         while True:
             changed = False
@@ -98,12 +120,12 @@ class EarleyParser:
                 changed = True
             if self.__predict(0):
                 changed = True
-
+            break
             if not changed:
                 break
-
+        
         for i in range(1, len(self._word) + 1):
-            self._processed_situation.clear()
+            self._processed_situations.clear()
             self.__scan(i - 1)
 
             while True:
