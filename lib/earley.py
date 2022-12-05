@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+
 class Rule:
     def __init__(self, left, right):
         self.left = left
@@ -30,13 +31,44 @@ class EarleyParser:
 
     def __init__(self, word, start_nonterminal, rules):
         self._rules = rules
-        for rule in self._rules:
-            rule.right.append(self._END_OF_STRING)
         self._word = word
         self._START_NONTERMINAL = start_nonterminal
+        self.__compress_coordinates()
+        for rule in self._rules:
+            rule.right.append(self._END_OF_STRING)
         # D_j is a map (symbol after .) -> (situation)
         self._stages = [defaultdict(lambda: []) for i in range(len(word) + 1)]
         self._processed_situations = set()
+
+    def __compress_coordinates(self):
+        unique_symbols = set()
+        compressed_coordinates = {}
+
+        for rule in self._rules:
+            unique_symbols.add(rule.left)
+            for symbol in rule.right:
+                unique_symbols.add(symbol)
+
+        for symbol in self._word:
+            unique_symbols.add(symbol)
+
+        coordinate = 1
+        for symbol in unique_symbols:
+            compressed_coordinates[symbol] = coordinate
+            coordinate += 1
+        compressed_coordinates[self._START_NONTERMINAL] = 0
+        self._START_NONTERMINAL = 0
+
+        for i in range(len(self._word)):
+            self._word[i] = compressed_coordinates[self._word[i]]
+
+        for i in range(len(self._rules)):
+            self._rules[i].left = compressed_coordinates[self._rules[i].left]
+            for j in range(len(self._rules[i].right)):
+                self._rules[i].right[j] = compressed_coordinates[
+                        self._rules[i].right[j]
+                        ]
+
 
     def __scan(self, index):
         changed = False
@@ -61,15 +93,13 @@ class EarleyParser:
         for i in range(len(self._rules)):
             nonterminal = self._rules[i].left
             first_symbol = self._rules[i].right[0]
-
-            j = 0
-            while j < len(self._stages[index][nonterminal]):
+            
+            if len(self._stages[index][nonterminal]) > 0:
                 new_situation = Situation(i, 0, index)
                 if new_situation not in self._processed_situations:
                     self._stages[index][first_symbol].append(new_situation)
                     self._processed_situations.add(new_situation)
                     changed = True
-                j += 1
 
         return changed
 
@@ -120,7 +150,7 @@ class EarleyParser:
                 changed = True
             if self.__predict(0):
                 changed = True
-            break
+
             if not changed:
                 break
         

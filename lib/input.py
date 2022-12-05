@@ -1,13 +1,11 @@
 from lib.earley import Rule
 
+
 class InputParser:
     def __init__(self, file):
         self.__input = file.readline
 
     def __parse_word(self, word):
-        if not word:
-            return None
-
         result = []
         terminal = False
         characters = []
@@ -40,7 +38,7 @@ class InputParser:
             nonterminal.count('"') > 0:
             return None
 
-        return nonterminal[1 : -1]
+        return nonterminal
 
     def __parse_rule(self, rule):
         delim_position = rule.find('=')
@@ -62,6 +60,7 @@ class InputParser:
                     characters.append(rule[i])
             elif nonterminal:
                 if rule[i] == '>':
+                    characters.append('>')
                     right_part.append(''.join(characters))
                     characters.clear()
                     nonterminal = False
@@ -71,6 +70,7 @@ class InputParser:
                 if rule[i] == '"':
                     terminal = True
                 elif rule[i] == '<':
+                    characters.append('<')
                     nonterminal = True
                 else:
                     return None
@@ -96,6 +96,9 @@ class InputParser:
             if rule == 'End':
                 break
             rules.append(self.__parse_rule(rule))
+
+        if word == None or start_nonterminal == None or None in rules:
+            return None
 
         return (word, start_nonterminal, rules)
 
