@@ -69,7 +69,6 @@ class EarleyParser:
                         self._rules[i].right[j]
                         ]
 
-
     def __scan(self, index):
         changed = False
         for situation in self._stages[index][self._word[index]]:
@@ -144,29 +143,25 @@ class EarleyParser:
             )
         self._processed_situations.add(Situation(new_rule, 0, 0))
         
-        while True:
+        changed = True
+        while changed:
             changed = False
             if self.__complete(0):
                 changed = True
             if self.__predict(0):
                 changed = True
-
-            if not changed:
-                break
         
         for i in range(1, len(self._word) + 1):
             self._processed_situations.clear()
             self.__scan(i - 1)
 
-            while True:
+            changed = True
+            while changed:
                 changed = False
                 if self.__complete(i):
                     changed = True
                 if self.__predict(i):
                     changed = True
-
-                if not changed:
-                    break
         
         return Situation(new_rule, 1, 0) in self._processed_situations
 
